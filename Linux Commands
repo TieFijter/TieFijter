@@ -124,6 +124,252 @@ This commadn prints the username and /bin/bash if the user has bash access
 gawk 'BEGIN {FS = ":"} ; {print $1, $7}' /etc/passwd | grep /bin/bash
 
 
+##############
+# Permissions
+##############
+
+Sticky bit, Suid (set user id), Sgid (set group id)
+
+Sticky bit-
+what is a sticky bit: save text attribute. a sticky bit is set on a directories or files world execute bit so that any user can read, write or access the directory. But all users and groups remain the same meaning no one can modify a file owned by your user and you cannot modify a file owned by their user root of course can modify. tmp is a great example of this. chmod +t directory_or_file  also chmod 1777 file_or_directory
+
+#> ls -dl tmp/
+drwxrwxrwt 4 root root 443300 Jan  4 21:04 tmp//
+
+suid sgid
+The file permissions bits include an execute permission bit for file owner, group and other. When the execute bit for the owner is set to "s" the set user ID bit is set. This causes any persons or processes that run the file to have access to system resources as though they are the owner of the file. When the execute bit for the group is set to "s", the set group ID bit is set and the user running the program is given access based on access permission for the group the file belongs to. 
+
+#Sets sticky bit. Also 1000 or 1755
+chmod +t mydir
+
+
+#Sets Suid bit. Also 4000 or 4644 will set the suid
+chmod u+s myfile
+
+#Sets the Sgid bit. Also 2000 or 2644 will set the sgid
+chmod g+s myfile
+
+
+The listing below shows a listing of two files that have the group or user ID bit set.
+-rws--x--x 1 root root 14024 Sep 9 1999 chfn
+-rwxr-sr-x 1 root mail 12072 Aug 16 1999 lockfile
+The files chfn and lockfile are located in the directory "/usr/bin". The "s" takes the place of the normal location of the execute bit in the file listings above. This special permission mode has no meaning unless the file has execute permission set for either the group or other as well. This means that in the case of the lockfile, if the other users (world execute) bit is not set with permission to execute, then the user ID bit set would be meaningless since only that same group could run the program anyhow. In both files, everyone can execute the binary. The first program, when run is executed as though the program is the root user. The second program is run as though the group "mail" is the user's group.
+
+For system security reasons it is not a good idea to set many program's set user or group ID bits any more than necessary, since this can allow an unauthorized user privileges in sensitive system areas. If the program has a flaw that allows the user to break out of the intended use of the program, then the system can be compromised.
+
+
+chmod u+x myfile
+Gives the user execute permission on myfile.
+chmod +x myfile
+Gives everyone execute permission on myfile.
+chmod ugo+x myfile
+Same as the above command, but specifically specifies user, group and other.
+chmod 400 myfile
+Gives the user read permission, and removes all other permission. These permissions are specified in octal, the first char is for the user, second for the group and the third is for other. The high bit (4) is for read access, the middle bit (2) os for write access, and the low bit (1) is for execute access.
+chmod 764 myfile
+Gives user full access, group read and write access, and other read access.
+chmod 751 myfile
+Gives user full access, group read and execute permission, and other, execute permission.
+chmod +s myfile
+Set the setuid bit.
+chmod go=rx myfile
+Remove read and execute permissions for the group and other.
+
+
+chown mark test1
+Changes the owner of the file test1 to the user Mark.
+chgrp mark test1
+Changes the file test1 to belong to the group "mark".
+
+
+Umask: by default the system will set executable files to 777 and text files to 666 umask will subtract permissions by 2 for the group
+
+666 would go to 644 therefore taking away the group and worlds ability to write to the file leaving it so that user and group can only read and the owner can read, write and execute.
+777 would go to 755 therefore taking away the group and worlds ability to write to the file leaving it so that user and group can read and execute and only the owner can read, write, and execute.
+
+umask is set so that a user has full rights to a file whereas anyone other than the owner of the file will not have full rights. example
+root has full rights whereas the members of workgrp can only read the file and world/other can only read the file.
+-rw-r--r-- 1 root workgrp 14233 Apr 24 10:32 textfile.txt
+
+set the umask by providing this command umask: 022
+
+device files device files are stored in /dev
+
+mounting filesystems
+
+fifo
+
+immutable files
+
+hardlink
+
+symlinks
+
+###########################
+# LINUX common directories
+###########################
+
+var = logs
+etc = config files
+tmp = temp files
+lib = shared libraries and kernel modules
+dev= device files
+mnt= mount point for mounting a filesystem temporarily
+sbin=essential system binaries
+boot= static files of the boot loader
+
+#sorts each user by username
+cut -d: -f1  /etc/passwd | sort
+
+#watch error logs in real time
+tail -f /var/log/domlogs/error_log
+
+# tail the last 5000 lines of the access logs to see ip’s accessing customers site
+tail -5000 /var/log/domlogs/domain.com | awk '{print $1}'|sort |uniq -c |sort -nr | head 
+
+
+rsync -rv /src/public_html/ ~/dst/public_html/  *important if I did not include the / after daily/public_html it would copy the contents to ~/public_html/directory
+
+info coreutils provides much info  on anything linux
+
+openssl s_client -connect domain.com:443 After
+
+#will insert the current date into the filename during the export
+mysql -uuser -p databasename > name.`date +%F`.sql 
+
+#will shows processes for you or customer only, rather then the entire server
+top -u 'whoami' c1z 
+
+
+sticky bit is on the execute field (only on directories)
+t = sticky bit (only in the execute field)
+s = set uid (only in the execute field)
+type field.
+d = directory
+l = symbolic link
+s = socket
+p = named pipe
+- = regular file
+c= character (unbuffered) device file special
+b=block (buffered) device file special
+
+#ls command explained
+lrwxrwxrwx   1 root root    7 Mar 18  2010 tmp -> var/tmp/
+
+# Command Breakdown from left to right.
+l signifies that tmp is symlinked
+r = read
+read = number 4
+w= write
+write = number 2
+x = execute
+execute  = number 1
+
+combined they = 7
+If permissions are set to 777 then the user, group and world can read, write and execute. If  execute is left out on world for example it will be 776, etc.
+
+The first 3 letters are for user the next 3 are for group and the next 3 are for world.
+######
+# TAR
+######
+
+tar - cvzf 
+-c= create
+-v= verbose
+-z= gzip
+-f= file
+-x= extract
+
+strace -p <PID> - Watches a process' output 
+
+netstat -plan|grep :80|awk {'print $5'}|cut -d: -f 1|sort|uniq -c|sort -nk 1
+
+
+#list files that contain balloon.html and pipe its output into rm’s input to remove those files
+ls *balloon.html | xargs rm 
+
+#files that contain balloon.html are piped to rm. -print0 and xargs -0 whitespace|space handle 
+find ./ -type f -name “*balloon.html” -print0 | xargs -0 rm
+
+find ./ -name .htaccess -exec grep -Hl suspend {} \; | xargs -i mv {} {}.bak
+
+#example of find with -maxdepth option. 
+find ./ -maxdepth 1 -type f -name "*.jpg" -print0 | xargs -0 rm -rf
+customer doesnt believe his port 1129(or whatever) is open.
+
+#################
+# ssh key pair
+#################
+
+Computer connecting from: 
+#>_ ssh-keygen -t rsa
+Take the id_rsa.pub file and rsync it to the comp you want to connect to:
+Example:  rsync --progress -az ~/.ssh/id_rsa.pub root@dst:~
+
+Then move id_rsa.pub to the .ssh dir if its not already there. Create a authorized_keys2 file then cat id_rsa.pub >>authorized_keys2 and your good to go
+
+#######
+# RAID
+########
+Raid0 is used to increase performance
+Combines two or more drives of equal size. Instead of stacking them end to end it sripes data alternately among the disks in the pool. Decreases write and access times. 
+- Note Raid0 ha reliability far inferior to separate disks. Two disk arary has double the annual failure rate of a single drive.
+
+Raid1 mirroring. Writes are duplicated to two or more drives simutaneously. Makes writing slightly slower than they would be on a single drive. However read speeds are increased because data is available in more than 1 location. 
+
+Raid 5 requires a minimum of 3 drives, 2 for actual data, 1 as a parity drive. If 1 drive failed we would swap it out and the new drive could then re create the data from the 1 drive and the 1 parity drive.
+
+Raid 6 requires a minimum of 4 drives, 2 for actual data and 2 for parity drives. If the two data drives failed they could be swapped and re created based off the parity drives.
+
+Raid 10 aka 1+0 mirrors of stripes.  4 drives required, data writes alternate between drive 1 and drive 3 while drive 2 mirrors the data write of drive 1 and drive 4 mirrors the data write of drive 3
+
+
+LVM
+
+3 phases
+creating adn initializing physical volumes
+adding the physical volumes to a volume group
+creating logical volumes on the volume group
+
+#creating physical volume from the raid array
+sudo pvcreate /dev/md0  
+
+#add physical volume to volume group
+sudo vgcreate DEMO /dev/md0
+
+#use to check volume group
+sudo vgdisplay DEMO
+
+# use to partition the volume group into logical volumes
+sudo lvcreate -L 10G -n web1 DEMO
+
+#create filesystem for our logical volume and mount point and finally mount
+sudo mkfs /dev/DEMO/web1
+sudo mkdir /mnt/web1
+sudo mount /dev/DEMO/web1 /mnt/web1
+
+a df -h will now show the logical volume mounted
+
+Resizing a Logical Volume
+
+umount /mnt/web1
+lvchange -an DEMO/web1
+lvresize -L +10G DEMO/web1
+lvchange -ay DEMO/web1
+
+Then we need to use resize2fs to modify the filesystem size
+
+resize2fs /dev/DEMO/web1  <- will make you run a filesystem check first
+
+e2fsck -f /dev/DEMO/web1   <- fsck
+
+cgi-bin not mod_perl
+cgi mod_perl
+
+VIM:
+
+# Add a character to multiple lines (great for commenting multiple
+cntrl-v -> line selection -> shift I -> character you want to insert for all lines -> esc
 
 
 
