@@ -1,0 +1,129 @@
+# Common commands I always have to google -- have fun
+
+#mount, unmount drive
+#> mount /dev/sda1 /media/usb-drive
+
+#adding a disk
+# find the disk UUID
+lsblk
+
+#rsync
+rsync -auz --progress /source /destination
+
+# make a disk permanent
+vim /etc/fstab
+add lines at the end
+/dev/disk-by-uuid/<insert disk UUID here> /partition <filessytemtype> defaults 0 2
+
+# show hidden files
+ls -lah
+
+# find files
+
+#example of deleting a file via its inode number -i to make sure
+find ./ -inum 3321666 | xargs rm -i
+
+#find and search using xargs grep rather than -exec grep
+find ./ -type f -name "*.php" -print0 |xargs -0 grep -Hl `whoami`_
+
+#find all .htaccess with the word suspend and then rename them to .bak
+find ./ -name .htaccess -print0 | xargs -0 -i grep -Hl suspend {} | xargs -i mv {} {}.bak
+
+#example of using find with -maxdepth and a pipe | and xargs combined with rm
+find ./ -maxdepth 1 -type f -name "*.gif" -print0 | xargs -0 rm -rf
+
+#example of stringing 2 actions together 
+find ./ -maxdepth 1 -type f -name filea.html -o -name fileb.css |xargs  rm
+
+#example of tar creating file of the extramileamerica directory contents | sending tar's output to tar's input where tar extracts the file verbosely after changing directories to ~/public_html 
+tar -cf - ./extramileamerica/ | tar -xvf - -C ~/public_html  
+
+#One way to recursively copy files from a backup (rsync is better practice)
+cp -r /home1/maviasei.daily/testsymlink /home1/maviasei/
+
+#Gets rid of pesky tmp directories and their lame permissions
+find ~/tmp/ -type d -perm 600 -exec chmod 755 {} \;
+find ~/tmp/ -type d -name 'rcs*' -exec rm -rf {} \;
+
+Semaphores
+ipcs -a
+
+strace -ostraceout -s300 php5 filename.*
+
+#Good for fastcgi processes to see what the particular file is. Also good to see who is opening the most mail connections 
+lsof -u `whoami` | grep home
+
+#Kill all processes owned by the user excluding bash and sshd
+ps -ef |grep `whoami` |grep -v bash |grep -v sshd |awk '{print $2}' | xargs kill
+
+#will move a public_html directory from the backup into the home directory as long as their is no public_html in the home
+rsync --progress -ar /home#/`whoami`.daily/public_html ~/
+
+rsync --progress -ar /$HOME.daily/public_html ~/
+
+#this will redirect stdout and stderr to /dev/null
+mycommand >/dev/null 2>&1
+
+#Use to narrow down where a server issue might be
+dstat -lvn --ipc
+
+#creates 9 files with extensions for each one two and three
+touch {one,two,three}{.html,.php,.txt}
+
+# export stored procedures
+sudo mysqldump --routines --no-data --no-create-info --no-create-db --skip-opt -f database_name > proceduresfile.sql
+
+# passes the ls -l output to awk input. awk then prints the 4th column
+ls -l | awk '{print $4}'
+
+#search and replace text from within vim ## g stands for global replace all instances
+:%s/patternsearchingfor/replacewith/g
+
+#from outside vim 
+sed -i 's/<oldstring>/<newstring>/g' /path/to/file/being/edited
+
+#specify which instance to replace in this case the 2nd instance myface is mentioned
+:%s/myface/yourface/2 -note I could only get this working from within vim
+
+#using perl
+perl -p -i -e 's/<oldstring>/<newstring>/g' /path/to/file/being/edited
+
+#matches the begging of the string and the end and replaces it with nothing.
+find ./ -name \*.php -exec sed -i 's#global $sessdt_o.*exit;} }##g' {} \;
+
+grep -P ‘^(a).*\1$’ /
+
+#will list different types of shells within /etc/passwd.
+cut -d: -f7 < /etc/passwd | sort -u
+
+Command breakdown:
+
+-d allows you to specify a delimiter (the default is space) In this example /etc/passwd is not separated by spaces but rather colons: so it makes sense to specify the delimiter of : with cut. 
+
+-f use -f# to pick out which portion of information you want after you set your delimiter so in this case the information contained within the 7th : will give us our results.
+
+<  connects the first part of the command (STDIN) to the contents of /etc/passwd
+
+|   Connects the STDOUT (aka the results) of the cut command to sort -u
+
+sort sorts through lines of text files
+
+-u prints out unique value
+# prints how many times a shell is counted in this example on port this was the resullt
+corbin@pork:testdir $ cut -d: -f7 < /etc/passwd | sort | uniq -c
+  	1
+ 	13 /bin/bash
+  	1 /bin/false
+  	1 /bin/sync
+  	1 /sbin/halt
+ 	28 /sbin/nologin
+  	1 /sbin/shutdown
+
+# ‘BEGIN {FS = “:”; This defines the field separater for awk to use rather than a space
+This commadn prints the username and /bin/bash if the user has bash access
+gawk 'BEGIN {FS = ":"} ; {print $1, $7}' /etc/passwd | grep /bin/bash
+
+
+
+
+
